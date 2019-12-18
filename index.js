@@ -20,6 +20,7 @@ class VGraph
          return coords[ci-1];
       }
    }
+   
    getNextPoint(pi, ci)
    {
       var coords = this.polygons[pi].geometry.coordinates[0];
@@ -155,7 +156,6 @@ class VGraph
          }
       }
 
-
       this.plcoords.forEach(function (pt1, i, p1Arr)
       {
          _self.plcoords.forEach(function (pt2, j, p2Arr)
@@ -197,11 +197,9 @@ class VGraph
 }
 
 //sample
-
 var polygons  = [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.4281652688796,0.5646496380838215],[73.43863661287372,0.5650787706706382],[73.43400175569599,0.5577835124031623],[73.43794996736591,0.5512606855852908],[73.42928106782979,0.5467976946933248],[73.4193247079665,0.5516039924387854],[73.42086966035907,0.5613024028213971],[73.4281652688796,0.5646496380838215]]]},"properties":null},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.44919378755635,0.5594142179813133],[73.44464476106708,0.5595858711737378],[73.4482496499831,0.550488245092609],[73.44550306795185,0.5479134427284293],[73.45812017915792,0.54387958346841],[73.46610243318622,0.553234699722239],[73.45563108919208,0.5547795798931361],[73.44919378755635,0.5594142179813133]]]},"properties":null}];
-
-var g = new VGraph(polygons);
-var gg = g.processGraph();
+var g         = new VGraph(polygons);
+var gg        = g.processGraph();
 
 $(gg).each(function()
 {
