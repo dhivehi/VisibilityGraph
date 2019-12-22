@@ -7,7 +7,7 @@ class VGraph
       this.plcoords = [];
       this.keys     = new Object();
    }
-   
+
    getPrevPoint(pi, ci)
    {
       var coords = this.polygons[pi].geometry.coordinates[0];
@@ -20,7 +20,6 @@ class VGraph
          return coords[ci-1];
       }
    }
-   
    getNextPoint(pi, ci)
    {
       var coords = this.polygons[pi].geometry.coordinates[0];
@@ -36,20 +35,11 @@ class VGraph
 
    pointsAreTangentToPolygons(p1, p2)
    {
+      var pp1check = this.getSide(p1.xy, p2.xy, p2.pp);
+      var np1check = this.getSide(p1.xy, p2.xy, p2.np); 
 
-      var p1pt = p1.xy;
-      var p1pp = this.getPrevPoint(p1.p, p1.c);
-      var p1np = this.getNextPoint(p1.p, p1.c);
-
-      var p2pt = p2.xy;
-      var p2pp = this.getPrevPoint(p2.p, p2.c);
-      var p2np = this.getNextPoint(p2.p, p2.c);
-
-      var pp1check = this.getSide(p1pt, p2pt, p2pp);
-      var np1check = this.getSide(p1pt, p2pt, p2np);
-
-      var pp2check = this.getSide(p2pt, p1pt, p1pp);
-      var np2check = this.getSide(p2pt, p1pt, p1np);
+      var pp2check = this.getSide(p2.xy, p1.xy, p1.pp);
+      var np2check = this.getSide(p2.xy, p1.xy, p1.np);
 
       if (((pp1check >= 0 && np1check >= 0) || (pp1check <= 0 && np1check <= 0)) && ((pp2check >= 0 && np2check >= 0) || (pp2check <= 0 && np2check <= 0)))
       {
@@ -109,11 +99,13 @@ class VGraph
       var goes = 0;
       for(var i=0;i<this.polygons.length;i++)
       {
-         var poly = this.polygons[i];
-         if (this.lineGoInsidePolygon(line, poly))
+         var poly  = this.polygons[i];
+         if (this.lineGoInsidePolygon(line, poly.properties.bbox))
          {
-            goes=1;
-            break;
+             if (this.lineGoInsidePolygon(line, poly)){
+                 goes=1; 
+                 break; 
+             } 
          }
       }
       return goes;
@@ -136,30 +128,33 @@ class VGraph
          this.graph.push(turf.lineString([pt1.xy, pt2.xy]));
       } else {
          this.keys[key].push([pt1.c,pt2.c,pt1.p,pt2.p]);
-         console.log(JSON.stringify(this.keys[key]));
+         console.log(JSON.stringify(this.keys[key]))
+         //console.log('addGeoJson('+JSON.stringify(turf.lineString([pt1.xy, pt2.xy]))+')');
       }
    }
 
    processGraph()
    {
-      var _self = this;
       for(var p=0;p<this.polygons.length;p++)
       {
+         this.polygons[p].properties.bbox = turf.bboxPolygon(turf.bbox(this.polygons[p]));
          var cds = turf.coordAll(this.polygons[p]);
          for (var c=0;c<cds.length-1;c++)
          {
             this.plcoords.push(
             {
-               'p':p, 'c':c, 'xy':cds[c], 'sc':(c==0), 'ec':(c==cds.length-1)
+               'p':p, 'c':c, 'xy':cds[c], 'sc':(c==0), 'ec':(c==cds.length-1), 'pp':this.getPrevPoint(p, c), 'np':this.getNextPoint(p, c)
             }
             );
          }
       }
-
-      this.plcoords.forEach(function (pt1, i, p1Arr)
+       
+      for(var i=0;i<this.plcoords.length;i++)
       {
-         _self.plcoords.forEach(function (pt2, j, p2Arr)
+         var pt1 = this.plcoords[i];
+         for(var j=0;j<this.plcoords.length;j++)
          {
+            var pt2 = this.plcoords[j];  
             if (i > j)
             {
                //if same polygon
@@ -168,41 +163,39 @@ class VGraph
                   //if points are next to each other
                   if (i-j==1)
                   {
-                     _self.addLine(pt1,pt2);
+                     this.addLine(pt1, pt2);
                   }
                   //if points are far (except s & e)
                   else
                   {
-                     if (_self.pointsAreTangentToPolygons(pt1, pt2))
+                     if (this.pointsAreTangentToPolygons(pt1, pt2))
                      {
-                        _self.checkPoly2polyPoint(pt1, pt2);
+                        this.checkPoly2polyPoint(pt1, pt2);
                      }
-                  }
+                  } 
                }
                //if points are not same polygon
                else
                {
-                  if (_self.pointsAreTangentToPolygons(pt1, pt2))
+                  if (this.pointsAreTangentToPolygons(pt1, pt2))
                   {
-                     _self.checkPoly2polyPoint(pt1, pt2);
+                     this.checkPoly2polyPoint(pt1, pt2);
                   }
                }
             }
          }
-         );
       }
-      )
       return this.graph;
    }
 }
 
 //sample
-var polygons  = [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.4281652688796,0.5646496380838215],[73.43863661287372,0.5650787706706382],[73.43400175569599,0.5577835124031623],[73.43794996736591,0.5512606855852908],[73.42928106782979,0.5467976946933248],[73.4193247079665,0.5516039924387854],[73.42086966035907,0.5613024028213971],[73.4281652688796,0.5646496380838215]]]},"properties":null},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.44919378755635,0.5594142179813133],[73.44464476106708,0.5595858711737378],[73.4482496499831,0.550488245092609],[73.44550306795185,0.5479134427284293],[73.45812017915792,0.54387958346841],[73.46610243318622,0.553234699722239],[73.45563108919208,0.5547795798931361],[73.44919378755635,0.5594142179813133]]]},"properties":null}];
+var polygons  = [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.4281652688796,0.5646496380838215],[73.43863661287372,0.5650787706706382],[73.43400175569599,0.5577835124031623],[73.43794996736591,0.5512606855852908],[73.42928106782979,0.5467976946933248],[73.4193247079665,0.5516039924387854],[73.42086966035907,0.5613024028213971],[73.4281652688796,0.5646496380838215]]]},"properties":{}},{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[73.44919378755635,0.5594142179813133],[73.44464476106708,0.5595858711737378],[73.4482496499831,0.550488245092609],[73.44550306795185,0.5479134427284293],[73.45812017915792,0.54387958346841],[73.46610243318622,0.553234699722239],[73.45563108919208,0.5547795798931361],[73.44919378755635,0.5594142179813133]]]},"properties":{}}];
 var g         = new VGraph(polygons);
-var gg        = g.processGraph();
+var paths     = g.processGraph();
 
-$(gg).each(function()
+for(var i=0;i<paths.length;i++)
 {
-   console.log(this)
+   console.log(paths[i])
 }
-)
+
