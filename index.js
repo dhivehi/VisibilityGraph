@@ -126,11 +126,7 @@ class VGraph
          this.keys[key] = [];
          this.keys[key].push([pt1.c,pt2.c,pt1.p,pt2.p]);
          this.graph.push(turf.lineString([pt1.xy, pt2.xy]));
-      } else {
-         this.keys[key].push([pt1.c,pt2.c,pt1.p,pt2.p]);
-         console.log(JSON.stringify(this.keys[key]))
-         //console.log('addGeoJson('+JSON.stringify(turf.lineString([pt1.xy, pt2.xy]))+')');
-      }
+      } 
    }
 
    processGraph()
